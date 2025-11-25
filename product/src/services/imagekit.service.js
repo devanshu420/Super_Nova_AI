@@ -15,6 +15,8 @@ async function uploadImage({ buffer, folder = '/products' }) {
         fileName: uuidv4(),
         folder,
     });
+    console.log("Image Response" , res);
+    
     return {
         url: res.url,
         thumbnail: res.thumbnailUrl || res.url,

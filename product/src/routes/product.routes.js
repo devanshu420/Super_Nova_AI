@@ -6,7 +6,7 @@ const multer = require("multer")
 
 
 // All Controller
-const { createProductContoller } = require("../controller/product.controller");
+const { createProductContoller , getProductController } = require("../controller/product.controller");
 
 // Auth Middleware
 const createAuthMiddleware = require("../middleware/auth.middleware");
@@ -26,6 +26,7 @@ router.post(
   createProductContoller
 );
 
-// GET
+// GET /api/products
+router.get("/",getProductController)
 
 module.exports = router;

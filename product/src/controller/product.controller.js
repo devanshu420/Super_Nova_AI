@@ -47,6 +47,45 @@ async function createProductContoller(req, res) {
   }
 }
 
+//Get Product Controller
+async function getProductController(req, res) {
+  
+    const { q, minprice, maxprice, skip = 0, limit = 20 } = req.query;
+
+    const filter = {};
+
+    if (q) {
+      filter.$text = { $search: q };
+    }
+
+    if (minprice) {
+      filter["price.amount"] = {
+        ...filter["price.amount"],
+        $gte: Number(minprice),
+      };
+    }
+
+    if (maxprice) {
+      filter["price.amount"] = {
+        ...filter["price.amount"],
+        $lte: Number(maxprice),
+      };
+    }
+    console.log("Filter for search -> ",filter);
+    
+    const products = await productModel
+      .find(filter)
+      .skip(Number(skip))
+      .limit(Math.min(Number(limit), 20));
+
+    return res.status(200).json({ data: products });
+  
+}
+
+
+
+
 module.exports = {
   createProductContoller,
+  getProductController,
 };
