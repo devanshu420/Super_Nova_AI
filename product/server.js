@@ -8,7 +8,7 @@ if (process.env.NODE_ENV !== 'test') {
 	connectDB();    
 
 	app.listen(3001, () => {
-	  console.log('Server is running on port 3000');
+	  console.log('Product Server is running on port 3001');
 	});
 }
 

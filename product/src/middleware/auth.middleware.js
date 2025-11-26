@@ -1,7 +1,8 @@
+const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 
-function createAuthMiddleware(role = ["seller"]) {
-  return function authMiddleware(req, res, next) {
+function AuthMiddleware(role = ["user"]) {
+  return function validateauthMiddleware(req, res, next) {
     const token =
       req.cookies?.token || req.headers?.authorization?.split(" ")[1];
     console.log(token);
@@ -36,4 +37,4 @@ function createAuthMiddleware(role = ["seller"]) {
   };
 }
 
-module.exports = createAuthMiddleware;
+module.exports = AuthMiddleware;
