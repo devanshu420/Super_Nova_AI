@@ -101,6 +101,8 @@ async function getProductByIdController(req, res) {
 
 //UPDATE CONTROLLER FOR PRODUCT *******************************************************************************************
 // Update Product Controller by ID
+
+// UPDATE CONTROLLER FOR PRODUCT
 async function updateProductByIDController(req, res) {
   try {
     const { id } = req.params;
@@ -110,51 +112,47 @@ async function updateProductByIDController(req, res) {
       return res.status(400).json({ message: "Invalid product id" });
     }
 
-    // Extract fields to update
+    // Find product
+    const product = await productModel.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Ensure only seller can update their product
+    if (product.seller.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({ message: "Forbidden: You can only update your own products" });
+    }
+
+    // Allowed fields to update
     const { title, description, priceAmount, priceCurrency, stock } = req.body;
 
-    const updateData = {};
+    if (title) product.title = title;
+    if (description) product.description = description;
+    if (stock !== undefined) product.stock = Number(stock);
 
-    if (title) updateData.title = title;
-    if (description) updateData.description = description;
-    if (stock !== undefined) updateData.stock = Number(stock);
-
-    // Handle price update
+    // Update price
     if (priceAmount || priceCurrency) {
-      updateData.price = {};
-      if (priceAmount) updateData.price.amount = Number(priceAmount);
-      if (priceCurrency) updateData.price.currency = priceCurrency;
+      product.price = product.price || {};
+      if (priceAmount !== undefined) product.price.amount = Number(priceAmount);
+      if (priceCurrency) product.price.currency = priceCurrency;
     }
 
-    // Handle Images (optional)
-   if (req.files && req.files.length > 0) {
-  const images = await Promise.all(
-    req.files.map((file) =>
-      uploadImage({
-        buffer: file.buffer,
-      })
-    )
-  );
-  updateData.images = images; 
-}
-
-
-    // Update product only if seller matches
-    const updatedProduct = await productModel.findOneAndUpdate(
-      { _id: id, seller: req.user.id },
-      { $set: updateData },
-      { new: true }
-    );
-
-    if (!updatedProduct) {
-      return res
-        .status(404)
-        .json({ message: "Product not found or unauthorized user" });
+    // Update images if provided
+    if (req.files && req.files.length > 0) {
+      const images = await Promise.all(
+        req.files.map((file) => uploadImage({ buffer: file.buffer }))
+      );
+      product.images = images;
     }
+
+    // Save changes
+    await product.save();
 
     return res.status(200).json({
       message: "Product updated successfully",
-      data: updatedProduct,
+      data: product,
     });
   } catch (err) {
     console.error("Update Product Error:", err);
@@ -162,6 +160,65 @@ async function updateProductByIDController(req, res) {
   }
 }
 
+//DELETE CONTROLLER FOR PRODUCT *******************************************************************************************
+// Delete Product Controller by ID
+
+async function deleteProductByIDController(req, res) {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid product id" });
+    }
+
+    const product = await productModel.findOne({
+      _id: id,
+    });
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    if (product.seller.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({ message: "Forbidden: You can only delete your own products" });
+    }
+    // Save Change for Delete
+    await product.deleteOne();
+
+    return res.status(200).json({
+      message: "Product deleted",
+    });
+  } catch (err) {
+    console.error("Delete Product Error:", err);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
+
+// Get Products By Seller ****************************************************************************************************
+async function getProductBySellerController(req, res) {
+  try {
+    const seller = req.user;
+    console.log("Seller is " , seller);
+    
+    const { skip = 0, limit = 20 } = req.query;
+
+    const products = await productModel
+      .find({ seller: seller.id })
+      .skip(Number(skip))
+      .limit(Math.min(Number(limit), 20));
+
+    return res.status(200).json({ data: products });
+  } catch (err) {
+    console.error("Get Products By Seller Error:", err);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
 
 
 
@@ -170,4 +227,6 @@ module.exports = {
   getProductController,
   getProductByIdController,
   updateProductByIDController,
+  deleteProductByIDController,
+  getProductBySellerController
 };
