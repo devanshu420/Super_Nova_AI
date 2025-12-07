@@ -10,10 +10,7 @@ const {
 } = require("../middlewares/validation.middleware");
 
 //GET /api/cart
-router.get('/',
-    AuthMiddleware([ 'user' ]),
-    cartController.getCart
-);
+router.get("/", AuthMiddleware(["user"]), cartController.getCart);
 
 //POST /api/cart/items
 router.post(
@@ -23,6 +20,7 @@ router.post(
   cartController.addItemToCart
 );
 
+// Update Quantity
 //PATCH /api/cart/items/:productId
 router.patch(
   "/items/:productId",
@@ -31,8 +29,11 @@ router.patch(
   cartController.updateItemQuantity
 );
 
+//Remove Lines
 // DELETE /api/cart/items/:productId
 
-// DELETE /api/cart
+// Clear Whole Cart
+// DELETE /api/cart/:productId
+router.delete("/:productId", AuthMiddleware(["user"]), cartController.deleteCart);
 
 module.exports = router;

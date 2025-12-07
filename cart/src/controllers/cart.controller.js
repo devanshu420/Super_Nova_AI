@@ -1,7 +1,5 @@
 const cartModel = require("../models/cart.model");
 
-
-
 // Add Item to Cart Controller **************************************************************************************
 async function addItemToCart(req, res) {
   const { productId, quantity } = req.body;
@@ -34,31 +32,36 @@ async function addItemToCart(req, res) {
 
 // Update Cart Controller ***************************************************************************************************
 async function updateItemQuantity(req, res) {
-  const { productId } = req.params;
-  const { quantity } = req.body;
-  const user = req.user;
+  try {
+    const { productId } = req.params;
+    const { quantity } = req.body;
+    const user = req.user;
 
-  const cart = await cartModel.findOne({ user: user.id });
+    const cart = await cartModel.findOne({ user: user.id });
 
-  if (!cart) {
-    return res.status(404).json({ message: "Cart not found" });
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
+
+    const existingItemIndex = cart.items.findIndex(
+      (item) => item.productId.toString() === productId
+    );
+
+    if (existingItemIndex < 0) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    cart.items[existingItemIndex].quantity = quantity;
+    await cart.save();
+
+    res.status(200).json({
+      message: "Item updated",
+      cart,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
-
-  const existingItemIndex = cart.items.findIndex(
-    (item) => item.productId.toString() === productId
-  );
-
-  if (existingItemIndex < 0) {
-    return res.status(404).json({ message: "Item not found" });
-  }
-
-  cart.items[existingItemIndex].quantity = quantity;
-  await cart.save();
-
-  res.status(200).json({
-    message: "Item updated",
-    cart,
-  });
 }
 
 // Get  Cart Controller *****************************************************************************************
@@ -80,8 +83,28 @@ async function getCart(req, res) {
     },
   });
 }
+
+// Delete or Clear Cart
+async function deleteCart(req, res) {
+  try {
+    const user = req.user;
+
+    // Find and delete the user's cart
+    const cart = await cartModel.findOneAndDelete({ user: user.id });
+
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
+
+    res.status(200).json({ message: "Cart deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+}
 module.exports = {
   getCart,
   addItemToCart,
   updateItemQuantity,
+  deleteCart,
 };
