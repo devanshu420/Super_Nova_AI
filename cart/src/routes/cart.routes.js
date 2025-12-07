@@ -1,16 +1,35 @@
 const express = require("express");
-const { route } = require("../app");
 const router = express.Router();
 
-const { createCartController } = require("../controllers/cart.controller");
+const cartController = require("../controllers/cart.controller");
+
+const AuthMiddleware = require("../middlewares/auth.middleware");
+const {
+  validateAddItemToCart,
+  validateUpdateCartItem,
+} = require("../middlewares/validation.middleware");
 
 //GET /api/cart
-// router.get("/" ,)
+router.get('/',
+    AuthMiddleware([ 'user' ]),
+    cartController.getCart
+);
 
 //POST /api/cart/items
-router.post("/items" , createCartController);
+router.post(
+  "/items",
+  validateAddItemToCart,
+  AuthMiddleware(["user"]),
+  cartController.addItemToCart
+);
 
 //PATCH /api/cart/items/:productId
+router.patch(
+  "/items/:productId",
+  validateUpdateCartItem,
+  AuthMiddleware(["user"]),
+  cartController.updateItemQuantity
+);
 
 // DELETE /api/cart/items/:productId
 

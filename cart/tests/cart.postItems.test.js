@@ -52,7 +52,7 @@ describe('POST /api/cart/items', () => {
         const res = await request(app)
             .post(endpoint)
             .set('Authorization', `Bearer ${token}`)
-            .send({ productId, qty: 2 });
+            .send({ productId, quantity : 2 });
 
         expect(res.status).toBe(200);
         expect(res.body.message).toBe('Item added to cart');
@@ -68,13 +68,13 @@ describe('POST /api/cart/items', () => {
         await request(app)
             .post(endpoint)
             .set('Authorization', `Bearer ${token}`)
-            .send({ productId, qty: 2 });
+            .send({ productId, quantity : 2 });
 
         // Second add
         const res = await request(app)
             .post(endpoint)
             .set('Authorization', `Bearer ${token}`)
-            .send({ productId, qty: 3 });
+            .send({ productId, quantity : 3 });
 
         expect(res.status).toBe(200);
         expect(res.body.cart.items).toHaveLength(1);
@@ -86,7 +86,7 @@ describe('POST /api/cart/items', () => {
         const res = await request(app)
             .post(endpoint)
             .set('Authorization', `Bearer ${token}`)
-            .send({ productId: 'invalid-id', qty: 1 });
+            .send({ productId: 'invalid-id', quantity : 1 });
 
         expect(res.status).toBe(400);
         expect(res.body.errors).toBeDefined();
@@ -94,12 +94,12 @@ describe('POST /api/cart/items', () => {
         expect(messages).toContain('Invalid Product ID format');
     });
 
-    test('validation error for non-positive qty', async () => {
+    test('validation error for non-positive quantity ', async () => {
         const token = signToken({ id: userId, role: 'user' });
         const res = await request(app)
             .post(endpoint)
             .set('Authorization', `Bearer ${token}`)
-            .send({ productId: productId, qty: 0 });
+            .send({ productId: productId, quantity : 0 });
 
         expect(res.status).toBe(400);
         expect(res.body.errors).toBeDefined();
@@ -110,7 +110,7 @@ describe('POST /api/cart/items', () => {
     test('401 when no token provided', async () => {
         const res = await request(app)
             .post(endpoint)
-            .send({ productId, qty: 1 });
+            .send({ productId, quantity : 1 });
         expect(res.status).toBe(401);
         expect(res.body.message).toMatch(/Unauthorized/);
     });
@@ -120,15 +120,17 @@ describe('POST /api/cart/items', () => {
         const res = await request(app)
             .post(endpoint)
             .set('Authorization', `Bearer ${token}`)
-            .send({ productId, qty: 1 });
+            .send({ productId, quantity : 1 });
         expect(res.status).toBe(403);
     });
 
-    test('401 when token invalid', async () => {
-        const res = await request(app)
-            .post(endpoint)
-            .set('Authorization', 'Bearer invalid.token.here')
-            .send({ productId, qty: 1 });
-        expect(res.status).toBe(401);
-    });
+   test('401 when token invalid', async () => {
+    const res = await request(app)
+        .post(endpoint)
+        .set('Authorization', 'Bearer invalid.token.here')
+        .send({ productId, quantity: 1 }); // fixed typo here
+
+    expect(res.status).toBe(401);
+});
+    
 });
