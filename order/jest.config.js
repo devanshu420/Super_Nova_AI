@@ -1,11 +1,7 @@
-/**
- * Jest configuration for Cart service
- */
+/** @type {import('jest').Config} */
 module.exports = {
     testEnvironment: 'node',
     roots: [ '<rootDir>/tests' ],
-    coverageDirectory: 'coverage',
-    collectCoverageFrom: [ 'src/**/*.js', '!src/db/**' ],
-    moduleFileExtensions: [ 'js', 'json' ],
-    setupFilesAfterEnv: [ '<rootDir>/tests/setup/globalSetup.js' ]
+    setupFiles: [ '<rootDir>/tests/setup/env.js' ],
+    setupFilesAfterEnv: [ '<rootDir>/tests/setup/mongodb.js' ],
 };
