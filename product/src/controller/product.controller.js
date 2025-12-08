@@ -160,6 +160,29 @@ async function updateProductByIDController(req, res) {
   }
 }
 
+// Update Stock Controller **********************************************
+
+async function updateStockController(req ,res) {
+  
+  try {
+    const { stock } = req.body;
+
+    const updated = await productModel.findByIdAndUpdate(
+      req.params.id,
+      { $set: { stock } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      product: updated
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 //DELETE CONTROLLER FOR PRODUCT *******************************************************************************************
 // Delete Product Controller by ID
 
@@ -227,6 +250,7 @@ module.exports = {
   getProductController,
   getProductByIdController,
   updateProductByIDController,
+  updateStockController,
   deleteProductByIDController,
   getProductBySellerController
 };
