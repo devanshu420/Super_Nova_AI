@@ -8,6 +8,7 @@ const {
   updateAddressValidation,
 } = require("../middlewares/validation.middleware");
 
+
 // Import Controllers ******************************************************************
 const orderController = require("../controllers/order.controller");
 
@@ -20,25 +21,41 @@ router.post(
 );
 
 // GET /api/orders/me ******************************************************************
-// router.get("/me", AuthMiddleware(["user"]), orderController.getMyOrders);
+router.get("/me", AuthMiddleware(["user"]), orderController.getMyOrders);
+
+// All Cancel
+// POST /api/orders/:id/cancelOrder ****************************************************
+router.post(
+  "/:id/cancelOrder",
+  AuthMiddleware(["user"]),
+  orderController.cancelOrderByOrderId
+);
+
+
+// PATCH /api/orders/:id/addressUpdate
+router.patch(
+  "/:id/addressUpdate",
+  AuthMiddleware(["user"]),
+  updateAddressValidation,
+  orderController.updateOrderAddress
+);
+
+// Partial Cancel
+// POST /api/orders/:orderId/item/:productId/cancel ****************************************************
 
 // router.post(
-//   "/:id/cancel",
+//   "/:orderId/item/:productId/cancel",
 //   AuthMiddleware(["user"]),
-//   orderController.cancelOrderById
+//   orderController.cancelPartialOrderByOrderId
 // );
 
-// router.patch(
-//   "/:id/address",
-//   AuthMiddleware(["user"]),
-//   validation.updateAddressValidation,
-//   orderController.updateOrderAddress
-// );
 
-// router.get(
-//   "/:id",
-//   AuthMiddleware(["user", "admin"]),
-//   orderController.getOrderById
-// );
+// Get Orders By Order ID
+// GET /api/orders/:id *****************************************************************
+router.get(
+  "/:id",
+  AuthMiddleware(["user", "admin"]),
+  orderController.getOrdersByOrderID
+);
 
 module.exports = router;

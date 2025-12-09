@@ -1,65 +1,84 @@
-const mongoose = require('mongoose');
-
+const mongoose = require("mongoose");
 
 const addressSchema = new mongoose.Schema({
-    street: String,
-    city: String,
-    state: String,
-    pincode: String,
-    country: String,
+  street: String,
+  city: String,
+  state: String,
+  pincode: String,
+  country: String,
 });
 
-const orderSchema = new mongoose.Schema({
-
+const orderSchema = new mongoose.Schema(
+  {
     user: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
     },
     items: [
-        {
-            product: {
-                type: mongoose.Schema.Types.ObjectId,
-                required: true,
-            },
-            quantity: {
-                type: Number,
-                default: 1,
-                min: 1
-            },
-            price: {
-                amount: {
-                    type: Number,
-                    required: true
-                },
-                currency: {
-                    type: String,
-                    required: true,
-                    enum: [ "USD", "INR" ]
-                }
-            }
-        }
-    ],
-    status: {
-        type: String,
-        enum: [ "PENDING", "CONFIRMED", "CANCELLED", "SHIPPED", "DELIVERED" ],
-    },
-    totalPrice: {
-        amount: {
-            type: Number,
-            required: true
+      {
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: true,
         },
-        currency: {
+        quantity: {
+          type: Number,
+          default: 1,
+          min: 1,
+        },
+        price: {
+          amount: {
+            type: Number,
+            required: true,
+          },
+          currency: {
             type: String,
             required: true,
-            enum: [ "USD", "INR" ]
-        }
+            enum: ["USD", "INR"],
+          },
+        },
+        // For Partial Order
+        // status: {
+        //   type: String,
+        //   enum: [
+        //     "PENDING",
+        //     "CONFIRMED",
+        //     "CANCELLED",
+        //     "SHIPPED",
+        //     "DELIVERED",
+        //     "PARTIALLY_CANCELLED",
+        //   ],
+        // },
+      },
+    ],
+    status: {
+      type: String,
+      enum: [
+        "PENDING",
+        "CONFIRMED",
+        "CANCELLED",
+        "SHIPPED",
+        "DELIVERED",
+        "PARTIALLY_CANCELLED",
+      ],
+    },
+    totalPrice: {
+      amount: {
+        type: Number,
+        required: true,
+      },
+      currency: {
+        type: String,
+        required: true,
+        enum: ["USD", "INR"],
+      },
     },
     shippingAddress: {
-        type: addressSchema,
-        required: true
+      type: addressSchema,
+      required: true,
     },
-}, { timestamps: true });
-
+  },
+  { timestamps: true }
+);
 
 const orderModel = mongoose.model("order", orderSchema);
 
