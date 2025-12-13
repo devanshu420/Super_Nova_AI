@@ -50,6 +50,8 @@ const graph = new StateGraph(MessagesAnnotation)
     .addConditionalEdges("chat", async (state) => {
 
         const lastMessage = state.messages[ state.messages.length - 1 ]
+        console.log("Last Message =>" , lastMessage);
+        
 
         if (lastMessage.tool_calls && lastMessage.tool_calls.length > 0) {
             return "tools"
