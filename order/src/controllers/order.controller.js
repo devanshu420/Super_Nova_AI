@@ -107,6 +107,8 @@ async function createOrder(req, res) {
       order,
     });
   } catch (error) {
+    console.log("Error is => " , error);
+    
     res.status(500).json({
       message: "Internal Server Error ",
       error: error.message,
