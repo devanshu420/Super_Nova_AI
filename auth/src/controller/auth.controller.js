@@ -3,12 +3,15 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookie = require("cookie-parser");
 
+
 // Import user model
 const userModel = require("../model/user.model");
 
 // Import Redis
-const redis = require("../db/redis")
+const redis = require("../db/redis");
 
+// Import Queue
+const {publishToQueue} = require("../broker/broker");
 
 // User Registration Controller ***************************************************************************************************
 const registerController = async (req, res) => {
@@ -19,7 +22,7 @@ const registerController = async (req, res) => {
       password,
       fullName: { firstName, lastName },
       address,
-      role
+      role,
     } = req.body;
 
     const isUserAlreadyExists = await userModel.findOne({
@@ -41,8 +44,22 @@ const registerController = async (req, res) => {
       email,
       password: hashedPassword,
       address: address,
-      role : role
+      role: role,
     });
+
+    // For Notification 
+    await Promise.all([
+      publishToQueue("AUTH_NOTIFICATION.USER_CREATED", {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        fullName: {
+          firstName : user.fullname.firstName,
+          lastName : user.fullname.lastName
+        }
+      }),
+      publishToQueue("AUTH_SELLER_DASHBOARD.USER_CREATED", user),
+    ]);
 
     const token = jwt.sign(
       {
@@ -153,41 +170,30 @@ const getCurrentUserController = async (req, res) => {
   }
 };
 
-
 // Logout User Controller ***********************************************************************************************
 
-const logOutUserController = async (req , res) => {
-
+const logOutUserController = async (req, res) => {
   // const token = req.cookie.token;
   const token = req.cookies?.token;
 
-  if(token){
+  if (token) {
     //Blacklist from Redis
-    await redis.set(`blacklist:${token}` , 'true' , 'EX' , 24 * 60 * 60);
+    await redis.set(`blacklist:${token}`, "true", "EX", 24 * 60 * 60);
   }
 
-  res.clearCookie('token' , {
-    httpOnly : true ,
-    secure : true
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
   });
 
   return res.status(200).json({
-    message : "Logged Out Successfully "
-  })
-
-
-
-}
-
-
-
-
-
+    message: "Logged Out Successfully ",
+  });
+};
 
 module.exports = {
   registerController,
   loginController,
   getCurrentUserController,
-  logOutUserController
-
+  logOutUserController,
 };
