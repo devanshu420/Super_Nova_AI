@@ -3,7 +3,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookie = require("cookie-parser");
 
-
 // Import user model
 const userModel = require("../model/user.model");
 
@@ -11,7 +10,7 @@ const userModel = require("../model/user.model");
 const redis = require("../db/redis");
 
 // Import Queue
-const {publishToQueue} = require("../broker/broker");
+const { publishToQueue } = require("../broker/broker");
 
 // User Registration Controller ***************************************************************************************************
 const registerController = async (req, res) => {
@@ -39,7 +38,7 @@ const registerController = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await userModel.create({
-      fullname: { firstName, lastName },
+      fullName: { firstName, lastName },
       username,
       email,
       password: hashedPassword,
@@ -47,18 +46,28 @@ const registerController = async (req, res) => {
       role: role,
     });
 
-    // For Notification 
+    // For Notification
     await Promise.all([
       publishToQueue("AUTH_NOTIFICATION.USER_CREATED", {
         id: user._id,
         username: user.username,
         email: user.email,
         fullName: {
-          firstName : user.fullname.firstName,
-          lastName : user.fullname.lastName
-        }
+          firstName: user.fullName.firstName,
+          lastName: user.fullName.lastName,
+        },
       }),
-      publishToQueue("AUTH_SELLER_DASHBOARD.USER_CREATED", user),
+      publishToQueue("AUTH_SELLER_DASHBOARD.USER_CREATED", {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        address: user.address,
+        fullName: {
+          firstName: user.fullName.firstName,
+          lastName: user.fullName.lastName,
+        },
+      }),
     ]);
 
     const token = jwt.sign(
