@@ -3,6 +3,8 @@ const productModel = require("../model/product.model");
 
 const { uploadImage } = require("../services/imagekit.service");
 
+const { publishToQueue } = require("../broker/broker");
+
 // Create Product Controller ********************************************************************************************************
 // Accepts multipart/form-data with fields: title, description, priceAmount, priceCurrency, images[] (files)
 async function createProductContoller(req, res) {
@@ -30,13 +32,15 @@ async function createProductContoller(req, res) {
       seller,
       images,
     });
-
-    // await publishToQueue("PRODUCT_SELLER_DASHBOARD.PRODUCT_CREATED", product);
-    // await publishToQueue("PRODUCT_NOTIFICATION.PRODUCT_CREATED", {
-    //     email: req.user.email,
-    //     productId: product._id,
-    //     sellerId: seller
-    // });
+// For Seller Dashboard Notification
+    await Promise.all([
+      publishToQueue("PRODUCT_SELLER_DASHBOARD.PRODUCT_CREATED", product),
+      publishToQueue("PRODUCT_NOTIFICATION.PRODUCT_CREATED", {
+        email: req.user.email,
+        productId: product._id,
+        sellerId: seller,
+      }),
+    ]);
 
     return res.status(201).json({
       message: "Product created",
@@ -162,8 +166,7 @@ async function updateProductByIDController(req, res) {
 
 // Update Stock Controller **********************************************
 
-async function updateStockController(req ,res) {
-  
+async function updateStockController(req, res) {
   try {
     const { stock } = req.body;
 
@@ -175,9 +178,8 @@ async function updateStockController(req ,res) {
 
     res.status(200).json({
       success: true,
-      product: updated
+      product: updated,
     });
-
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -225,8 +227,8 @@ async function deleteProductByIDController(req, res) {
 async function getProductBySellerController(req, res) {
   try {
     const seller = req.user;
-    console.log("Seller is " , seller);
-    
+    console.log("Seller is ", seller);
+
     const { skip = 0, limit = 20 } = req.query;
 
     const products = await productModel
@@ -243,8 +245,6 @@ async function getProductBySellerController(req, res) {
   }
 }
 
-
-
 module.exports = {
   createProductContoller,
   getProductController,
@@ -252,5 +252,5 @@ module.exports = {
   updateProductByIDController,
   updateStockController,
   deleteProductByIDController,
-  getProductBySellerController
+  getProductBySellerController,
 };
