@@ -15,9 +15,10 @@ module.exports = function () {
 
         await sendEmail(data.email, "Welcome to Our Service", "Thank you for registering with us!", emailHTMLTemplate);
 
-    })
+    });
 
     subscribeToQueue("PAYMENT_NOTIFICATION.PAYMENT_INITIATED", async (data) => {
+        console.log("📩 PAYMENT INITIATED MAIL DATA =>", data);
         const emailHTMLTemplate = `
         <h1>Payment Initiated</h1>
         <p>Dear ${data.username},</p>
@@ -26,8 +27,7 @@ module.exports = function () {
         <p>Best regards,<br/>The Team</p>
         `;
         await sendEmail(data.email, "Payment Initiated", "Your payment is being processed", emailHTMLTemplate);
-    }
-)
+    });
 
     subscribeToQueue("PAYMENT_NOTIFICATION.PAYMENT_COMPLETED", async (data) => {
         const emailHTMLTemplate = `
@@ -38,7 +38,7 @@ module.exports = function () {
         <p>Best regards,<br/>The Team</p>
         `;
         await sendEmail(data.email, "Payment Successful", "We have received your payment", emailHTMLTemplate);
-    })
+    });
 
 
     subscribeToQueue("PAYMENT_NOTIFICATION.PAYMENT_FAILED", async (data) => {
@@ -50,7 +50,7 @@ module.exports = function () {
         <p>Best regards,<br/>The Team</p>
         `;
         await sendEmail(data.email, "Payment Failed", "Your payment could not be processed", emailHTMLTemplate);
-    })
+    });
 
     subscribeToQueue("PRODUCT_NOTIFICATION.PRODUCT_CREATED", async (data) => {
         const emailHTMLTemplate = `
@@ -60,6 +60,6 @@ module.exports = function () {
         <p>Best regards,<br/>The Team</p>
         `;
         await sendEmail(data.email, "New Product Launched", "Check out our latest product", emailHTMLTemplate);
-    })
+    });
 
 }

@@ -46,29 +46,56 @@ const registerController = async (req, res) => {
       role: role,
     });
 
-    // For Notification
-    await Promise.all([
-      publishToQueue("AUTH_NOTIFICATION.USER_CREATED", {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        fullName: {
-          firstName: user.fullName.firstName,
-          lastName: user.fullName.lastName,
-        },
-      }),
-      publishToQueue("AUTH_SELLER_DASHBOARD.USER_CREATED", {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        address: user.address,
-        fullName: {
-          firstName: user.fullName.firstName,
-          lastName: user.fullName.lastName,
-        },
-      }),
-    ]);
+    // // For Notification
+    // await Promise.all([
+    //   publishToQueue("AUTH_NOTIFICATION.USER_CREATED", {
+    //     id: user._id,
+    //     username: user.username,
+    //     email: user.email,
+    //     fullName: {
+    //       firstName: user.fullName.firstName,
+    //       lastName: user.fullName.lastName,
+    //     },
+    //   }),
+    //   publishToQueue("AUTH_SELLER_DASHBOARD.USER_CREATED", {
+    //     id: user._id,
+    //     username: user.username,
+    //     email: user.email,
+    //     role: user.role,
+    //     address: user.address,
+    //     fullName: {
+    //       firstName: user.fullName.firstName,
+    //       lastName: user.fullName.lastName,
+    //     },
+    //   }),
+    // ]);
+    
+
+    // Always send notification to AUTH_NOTIFICATION
+await publishToQueue("AUTH_NOTIFICATION.USER_CREATED", {
+  id: user._id,
+  username: user.username,
+  email: user.email,
+  fullName: {
+    firstName: user.fullName.firstName,
+    lastName: user.fullName.lastName,
+  },
+});
+
+// Only send to seller dashboard if role === "seller"
+if (user.role === "seller") {
+  await publishToQueue("AUTH_SELLER_DASHBOARD.USER_CREATED", {
+    id: user._id,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+    address: user.address,
+    fullName: {
+      firstName: user.fullName.firstName,
+      lastName: user.fullName.lastName,
+    },
+  });
+}
 
     const token = jwt.sign(
       {

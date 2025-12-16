@@ -41,20 +41,22 @@ async function createPayment(req, res) {
       razorpayOrderId: razorpayOrder.id,
       user: req.user.id,
       price: {
-        amount: razorpayOrder.amount,
+        amount: razorpayOrder.amount / 100,
         currency: razorpayOrder.currency,
       },
     });
 
     // For Payment Notification
     await publishToQueue("PAYMENT_SELLER_DASHBOARD.PAYMENT_CREATED", payment);
-    await publishToQueue("PAYMENT_NOTIFICATION.PAYMENT_INITIATED", {
-      email: req.user.email,
-      orderId: orderId,
-      amount: price.amount,
-      currency: price.currency,
-      username: req.user.username,
-    });
+
+  await publishToQueue("PAYMENT_NOTIFICATION.PAYMENT_INITIATED", {
+  email: req.user.email,
+  orderId,
+  amount: razorpayOrder.amount / 100, 
+  currency: razorpayOrder.currency,
+  username: req.user.username,
+});
+
 
     return res.status(201).json({
       message: "Payment initiated",

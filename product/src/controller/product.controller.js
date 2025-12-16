@@ -10,7 +10,9 @@ const { publishToQueue } = require("../broker/broker");
 async function createProductContoller(req, res) {
   try {
     const { title, description, priceAmount, priceCurrency = "INR" } = req.body;
-    const seller = req.user.id; // Extract seller from authenticated user
+    const seller = req.user.userId;
+    console.log("REQ USER =>", req.user);
+
 
     const price = {
       amount: Number(priceAmount),
@@ -32,15 +34,25 @@ async function createProductContoller(req, res) {
       seller,
       images,
     });
-// For Seller Dashboard Notification
-    await Promise.all([
-      publishToQueue("PRODUCT_SELLER_DASHBOARD.PRODUCT_CREATED", product),
-      publishToQueue("PRODUCT_NOTIFICATION.PRODUCT_CREATED", {
-        email: req.user.email,
-        productId: product._id,
-        sellerId: seller,
-      }),
-    ]);
+
+try {
+  await publishToQueue("PRODUCT_SELLER_DASHBOARD.PRODUCT_CREATED", {
+    productId: product._id,
+    title: product.title,
+    price: product.price,
+    seller: product.seller,
+    images: product.images,
+  });
+
+  await publishToQueue("PRODUCT_NOTIFICATION.PRODUCT_CREATED", {
+    email: req.user.email,
+    productId: product._id,
+    sellerId: seller,
+  });
+} catch (queueError) {
+  console.error("Queue publish failed", queueError);
+}
+
 
     return res.status(201).json({
       message: "Product created",
