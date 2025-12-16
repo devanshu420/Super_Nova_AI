@@ -1,5 +1,6 @@
 const axios = require("axios");
 const orderModel = require("../models/order.model");
+const {publishToQueue} = require("../broker/broker")
 
 // Create Order Controller ****************************************************************************************************
 async function createOrder(req, res) {
@@ -102,6 +103,10 @@ async function createOrder(req, res) {
         country: req.body.shippingAddress.country,
       },
     });
+
+    // For Seller Dashboard Notification
+    await publishToQueue("ORDER_SELLER_DASHBOARD.ORDER_CREATED", order)
+    
 
     res.status(201).json({
       order,
