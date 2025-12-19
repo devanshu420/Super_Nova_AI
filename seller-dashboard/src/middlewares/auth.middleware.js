@@ -1,40 +1,37 @@
-const mongoose = require("mongoose");
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
 
-function AuthMiddleware(role = ["user"]) {
-  return function validateauthMiddleware(req, res, next) {
-    const token =
-      req.cookies?.token || req.headers?.authorization?.split(" ")[1];
-    console.log(token);
+function AuthMiddleware(roles = [ "user" ]) {
 
-    if (!token) {
-      return res.status(401).json({
-        token,
-        message: "Unauthorized , No token Provided",
-      });
+    return function authMiddleware(req, res, next) {
+        const token = req.cookies?.token || req.headers?.authorization?.split(' ')[ 1 ];
+
+        if (!token) {
+            return res.status(401).json({
+                message: 'Unauthorized: No token provided',
+            });
+        }
+
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET)
+
+            if (!roles.includes(decoded.role)) {
+                return res.status(403).json({
+                    message: 'Forbidden: Insufficient permissions',
+                });
+            }
+
+            req.user = decoded;
+            next();
+        }
+        catch (err) {
+            return res.status(401).json({
+                message: 'Unauthorized: Invalid token',
+            });
+        }
+
     }
 
-    try {
-      const decode = jwt.verify(token, process.env.JWT_SECRET || " ");
-      console.log(decode.role);
-      
-
-      if (!role.includes(decode.role)) {
-        return res.status(403).json({
-          message: "Forbidden , Insufficien Permission -> Role Incrorrect",
-          role
-        });
-      }
-
-      req.user = decode;
-
-      next();
-    } catch (error) {
-      return res.status(401).json({
-        message: "Unauthrize : Access Denied -> Invalid Token ",
-      });
-    }
-  };
 }
+
 
 module.exports = AuthMiddleware;

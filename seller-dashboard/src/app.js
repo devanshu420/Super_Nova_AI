@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // For Routes Manage
-app.use("/api/seller" , sellerRoutes);
+app.use("/api/seller/dashboard" , sellerRoutes);
 
 
 
