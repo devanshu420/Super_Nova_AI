@@ -2,9 +2,11 @@ const { tool } = require("@langchain/core/tools")
 const { z } = require("zod")
 const axios = require("axios")
 
-const searchProduct = tool(async ({ query, token }) => {
+const searchProduct = tool(async ({ query , token }) => {
 
-    console.log("searchProduct called with data:", { query, token })
+    // const token = config.metadata.token;
+
+    console.log("searchProduct called with data:", { query, token} )
 
     const response = await axios.get(`http://localhost:3001/api/products?q=${query}`, {
         headers: {

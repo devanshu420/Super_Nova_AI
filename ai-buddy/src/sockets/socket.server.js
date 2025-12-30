@@ -2,6 +2,7 @@ const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const cookie = require("cookie");
 const agent = require("../agent/agent");
+const { HumanMessage, SystemMessage } = require("@langchain/core/messages");
 
 async function initSocketServer(httpServer) {
   const io = new Server(httpServer, {});
@@ -33,13 +34,32 @@ async function initSocketServer(httpServer) {
     socket.on("message", async (data) => {
       console.log("Recieved Message => ", data);
 
+      // const agentResponse = await agent.invoke(
+      //   {
+      //     messages: [
+      //       {
+      //         role: "user",
+      //         content: data,
+      //       },
+      //     ],
+      //   },
+      //   {
+      //     metadata: {
+      //       token: socket.token,
+      //     },
+      //   }
+      // );
+
       const agentResponse = await agent.invoke(
         {
           messages: [
-            {
-              role: "user",
-              content: data,
-            },
+            new SystemMessage(`
+You are an AI shopping assistant.
+Use tools when needed.
+- Use searchProduct to search products
+- Use addProductToCart to add items
+      `),
+            new HumanMessage(data),
           ],
         },
         {
@@ -49,12 +69,12 @@ async function initSocketServer(httpServer) {
         }
       );
 
-      console.log("Agent Response =>" , agentResponse);
-      
-      // const lastMessage =
-      //   agentResponse.messages[agentResponse.messages.length - 1];
+      console.log("Agent Response =>", agentResponse);
 
-      // socket.emit("message", lastMessage.content);
+      const lastMessage =
+        agentResponse.messages[agentResponse.messages.length - 1];
+
+      socket.emit("message", lastMessage.content);
     });
   });
 }
